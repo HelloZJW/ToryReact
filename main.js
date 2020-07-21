@@ -13,7 +13,10 @@ class MyComponent extends Componet {
 }
 
 let a = <MyComponent name="a">
-  <div>12123</div>
+  <div><span>I </span>
+    <span>am </span>
+    <span>ToyReact!</span>
+  </div>
 </MyComponent>
 
 ToyReact.render(a, document.body);
