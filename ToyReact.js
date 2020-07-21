@@ -44,7 +44,7 @@ class TextWrapper {
     }
 }
 
-export class Componet {
+export class Component {
     constructor() {
         this.children = [];
         this.props = Object.create(null);
@@ -65,6 +65,12 @@ export class Componet {
     }
 
     update() {
+        let placeholder = document.createComment('placeholder');
+        let range = document.createRange();
+        range.setStart(this.range.endContainer, this.range.endOffset);
+        range.setEnd(this.range.endContainer, this.range.endOffset);
+        range.insertNode(placeholder);
+
         this.range.deleteContents();
         let vdom = this.render();
         vdom.mountTo(this.range);
@@ -111,8 +117,6 @@ export const ToyReact = {
                 } else {
                     if (typeof child === "string") {
                         child = new TextWrapper(child);
-                    } else if (child instanceof Componet) {
-                        child = new child;
                     }
                     element.appendChild(child);
                 }
