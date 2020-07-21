@@ -7,6 +7,10 @@ class MyComponent extends Componet {
         <span>Hello,</span>
         <span>world</span>
         {this.children}
+        {this.state ? this.state.value : '0'}
+        <button onClick={() => {
+          this.setState({ value: 'x' });
+        }}>点我</button>
       </div>
     );
   }
