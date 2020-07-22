@@ -1,44 +1,60 @@
 
 class ElementWrapper {
     constructor(type) {
-        this.root = document.createElement(type);
+        this.type = type;
+        this.props = Object.create(null);
+        this.children = [];
     }
 
     setAttribute(name, value) {
-        if (name.match(/^on([\s\S]+)$/)) {
-            let eventName = RegExp.$1.replace(/^[\s\S]/, (s) => s.toLowerCase());
-            this.root.addEventListener(eventName, value);
-        }
-        if (name === "className") {
-            name = "class";
-        }
-        this.root.setAttribute(name, value);
+        this.props[name] = value;
     }
 
     appendChild(vChild) {
-        let range = document.createRange();
-        if (this.root.children.length) {
-            range.setStartAfter(this.root.lastChild);
-            range.setEndAfter(this.root.lastChild);
-        } else {
-            range.setStart(this.root, 0);
-            range.setEnd(this.root, 0);
-        }
-        vChild.mountTo(range);
+        this.children.push(vChild);
     }
 
     mountTo(range) {
+        this.range = range;
         range.deleteContents();
-        range.insertNode(this.root);
+        let element = document.createElement(this.type);
+        for (let name in this.props) {
+            let value = this.props[name];
+            if (name.match(/^on([\s\S]+)$/)) {
+                let eventName = RegExp.$1.replace(/^[\s\S]/, (s) => s.toLowerCase());
+                element.addEventListener(eventName, value);
+            }
+            if (name === "className") {
+                name = "class";
+            }
+            element.setAttribute(name, value);
+        }
+        for (const child of this.children) {
+            let range = document.createRange();
+            if (element.children.length) {
+                range.setStartAfter(element.lastChild);
+                range.setEndAfter(element.lastChild);
+            } else {
+                range.setStart(element, 0);
+                range.setEnd(element, 0);
+            }
+            child.mountTo(range);
+        }
+
+        range.insertNode(element);
     }
 }
 
 class TextWrapper {
     constructor(type) {
         this.root = document.createTextNode(type);
+        this.type = "#text";
+        this.children = [];
+        this.props = Object.create(null);
     }
 
     mountTo(range) {
+        this.range = range;
         range.deleteContents();
         range.insertNode(this.root);
     }
@@ -48,6 +64,17 @@ export class Component {
     constructor() {
         this.children = [];
         this.props = Object.create(null);
+    }
+
+    get type() {
+        return this.constructor.name;
+    }
+    componentDidMount() {
+
+    }
+
+    componentWillUnmount() {
+
     }
 
     setAttribute(name, value) {
@@ -60,18 +87,13 @@ export class Component {
     }
 
     mountTo(range) {
+        this.componentWillUnmount();
         this.range = range;
         this.update();
+        this.componentDidMount();
     }
 
     update() {
-        let placeholder = document.createComment('placeholder');
-        let range = document.createRange();
-        range.setStart(this.range.endContainer, this.range.endOffset);
-        range.setEnd(this.range.endContainer, this.range.endOffset);
-        range.insertNode(placeholder);
-
-        this.range.deleteContents();
         let vdom = this.render();
         vdom.mountTo(this.range);
     }
@@ -79,9 +101,12 @@ export class Component {
     setState(state) {
         let merge = (oldState, newState) => {
             for (const p in newState) {
-                if (typeof newState[p] === "object") {
+                if (typeof newState[p] === "object" && newState[p] !== null) {
                     if (typeof oldState[p] !== "object") {
-                        oldState[p] = {};
+                        if (newState[p] instanceof Array) {
+                            oldState[p] = [];
+                        } else
+                            oldState[p] = {};
                     }
                     merge(oldState[p], newState[p]);
                 } else {
@@ -112,6 +137,9 @@ export const ToyReact = {
 
         let insertChildren = (_children) => {
             for (let child of _children) {
+                if (child === null || child === void 0) {
+                    child = "";
+                }
                 if (typeof child === "object" && child instanceof Array) {
                     insertChildren(child);
                 } else {
