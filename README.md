@@ -8,6 +8,6 @@
 - [x] virtual dom partial update ( simple implemention)
 - [ ] refactor with typescript
 - [ ] customize event
-- [ ] enhance partial update algorithm 
-- [ ] function component
-- [ ] hooks implemention
+- [ ] Improve performance of partial update algorithm 
+- [ ] support function component
+- [ ] support hooks
